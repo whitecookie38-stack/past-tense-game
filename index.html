@@ -2,896 +2,1227 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>초등 영어 과거형 맞추기 게임</title>
-    <!-- Tailwind CSS & FontAwesome -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영단어 과거형 팝팝! (Past Tense Rain Pop)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body {
-            font-family: 'Nanum Gothic', sans-serif;
+            font-family: 'Jua', 'Nunito', sans-serif;
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
         }
-        .font-jua { font-family: 'Jua', sans-serif; }
+        .font-en {
+            font-family: 'Nunito', sans-serif;
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)); }
+            50% { filter: drop-shadow(0 0 20px rgba(251, 191, 36, 1)); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-float { animation: floatSlow 3s ease-in-out infinite; }
+        .animate-glow { animation: pulseGlow 2s infinite; }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
         
-        .cloud-element {
-            position: absolute;
-            cursor: pointer;
-            transition: transform 0.1s ease, filter 0.1s ease;
-            will-change: transform, top;
-        }
-        .cloud-element:active {
-            transform: scale(0.92);
-        }
-        
-        /* 팝업 모달 애니메이션 */
-        .modal-enter {
-            opacity: 0;
-            transform: scale(0.9);
-        }
-        .modal-enter-active {
-            opacity: 1;
-            transform: scale(1);
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-
-        /* 커스텀 스크롤바 */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-start min-h-screen p-2 sm:p-4 text-gray-800">
+<body class="bg-gradient-to-br from-sky-400 via-indigo-500 to-purple-600 min-h-screen text-slate-800 flex flex-col justify-between overflow-x-hidden p-2 sm:p-4">
 
-    <!-- 메인 컨테이너 (PC 대화면 반응형 확장) -->
-    <div class="w-full max-w-6xl flex flex-col items-center">
+    <header class="w-full max-w-6xl mx-auto p-2 sm:p-4 flex items-center justify-between gap-2 z-10">
+        <div class="flex items-center gap-2 sm:gap-3 bg-white/90 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl shadow-lg border-2 border-white/50">
+            <span class="text-2xl sm:text-3xl">☁️</span>
+            <div>
+                <h1 class="text-base sm:text-xl md:text-2xl font-black text-indigo-700 leading-tight">과거형 비가 내려요!</h1>
+                <p class="hidden sm:block text-xs text-indigo-500 font-semibold">초등 영어 과거형 맞추기 게임</p>
+            </div>
+        </div>
 
-        <!-- 1. 헤더 영역 -->
-        <header class="w-full flex justify-between items-center mb-2 px-2">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/90 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl shadow-lg border border-white/50 flex items-center gap-2">
-                    <span class="text-2xl sm:text-3xl">☁️</span>
-                    <div>
-                        <h1 class="font-jua text-xl sm:text-2xl md:text-3xl text-indigo-900 leading-tight">과거형 비가 내려요!</h1>
-                        <p class="text-xs sm:text-sm text-indigo-600 font-bold">초등 영어 과거형 맞추기 게임</p>
+        <div class="flex items-center gap-1.5 sm:gap-2">
+            <button id="soundToggleBtn" onclick="toggleSound()" class="bg-white/90 hover:bg-white text-indigo-700 p-2 sm:px-3 sm:py-2 rounded-2xl shadow-lg border-2 border-white/50 flex items-center gap-1 font-bold transition transform active:scale-95 text-xs sm:text-sm">
+                <span id="soundIcon" class="text-lg sm:text-xl">🔊</span>
+                <span id="soundText" class="hidden md:inline">소리 ON</span>
+            </button>
+            
+            <button onclick="openAdminModal()" class="bg-amber-400 hover:bg-amber-300 text-amber-950 px-2.5 py-2 sm:px-4 sm:py-2 rounded-2xl shadow-lg border-2 border-amber-200 flex items-center gap-1 font-bold transition transform active:scale-95 text-xs sm:text-sm">
+                <span class="text-lg sm:text-xl">📊</span>
+                <span class="hidden sm:inline">시트 연동 / 관리자</span>
+                <span class="sm:hidden">관리자</span>
+                <span id="syncBadge" class="w-2.5 h-2.5 rounded-full bg-slate-400 animate-pulse ml-0.5" title="시트 연결 상태"></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl mx-auto px-1 sm:px-4 my-2 flex-1 flex flex-col justify-center items-center relative">
+
+        <div id="startScreen" class="w-full bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-8 shadow-2xl border-4 border-indigo-200 text-center max-w-xl my-auto animate-float">
+            <div class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full mb-2 sm:mb-3">
+                🎮 English Past Tense Game
+            </div>
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-indigo-900 mb-2">알맞은 과거형을 터치하세요!</h2>
+            <p class="text-slate-600 text-xs sm:text-base mb-4 sm:mb-6">
+                위에서 제시하는 현재형 단어를 확인하고,<br>
+                내려오는 구름 중 <span class="text-indigo-600 font-extrabold">올바른 과거형(Past Tense)</span> 3개를 찾아 터치하세요!
+            </p>
+
+            <div class="space-y-3 sm:space-y-4 mb-5 sm:mb-6 text-left max-w-md mx-auto">
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1">학번 및 이름 <span class="text-rose-500">*</span></label>
+                    <input type="text" id="studentNameInput" placeholder="예: 5학년 2반 15번 김민수" class="w-full px-3 py-2.5 sm:px-4 sm:py-3 rounded-2xl border-2 border-slate-200 focus:border-indigo-500 focus:outline-none text-sm sm:text-base font-bold shadow-inner">
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1">난이도 선택 (목숨 개수)</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button onclick="selectDifficulty(10, this)" class="diff-btn active bg-emerald-500 text-white font-bold py-2.5 px-1 rounded-xl text-xs sm:text-sm border-2 border-emerald-600 shadow-sm transition hover:scale-105">
+                            💚 10개 (쉬움)
+                        </button>
+                        <button onclick="selectDifficulty(5, this)" class="diff-btn bg-slate-100 text-slate-700 font-bold py-2.5 px-1 rounded-xl text-xs sm:text-sm border-2 border-slate-200 shadow-sm transition hover:bg-slate-200 hover:scale-105">
+                            💛 5개 (보통)
+                        </button>
+                        <button onclick="selectDifficulty(3, this)" class="diff-btn bg-slate-100 text-slate-700 font-bold py-2.5 px-1 rounded-xl text-xs sm:text-sm border-2 border-slate-200 shadow-sm transition hover:bg-slate-200 hover:scale-105">
+                            🧡 3개 (어려움)
+                        </button>
+                        <button onclick="selectDifficulty(1, this)" class="diff-btn bg-slate-100 text-slate-700 font-bold py-2.5 px-1 rounded-xl text-xs sm:text-sm border-2 border-slate-200 shadow-sm transition hover:bg-slate-200 hover:scale-105">
+                            ❤️ 1개 (달인)
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <button id="soundToggleBtn" onclick="toggleSound()" class="bg-white/90 hover:bg-white text-indigo-800 font-bold px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5 text-xs sm:text-sm border border-white/50">
-                    <i id="soundIcon" class="fas fa-volume-up text-indigo-600"></i> <span id="soundText" class="hidden sm:inline">소리 ON</span>
+            <div class="flex flex-col sm:flex-row gap-2.5 max-w-md mx-auto">
+                <button onclick="startGame()" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-3.5 sm:py-4 px-6 rounded-2xl shadow-xl border-b-4 border-indigo-800 active:border-b-0 transform active:translate-y-1 transition text-base sm:text-lg flex items-center justify-center gap-2">
+                    🚀 게임 시작하기!
                 </button>
-                <button onclick="openAdminModal()" class="bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5 text-xs sm:text-sm border border-amber-200">
-                    <i class="fas fa-file-csv"></i> <span class="hidden sm:inline">시트 연동 / 관리자</span> <span id="syncBadge" class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
-                </button>
-            </div>
-        </header>
-
-        <!-- 2. 게임 시작 전 화면 (대기 화면) -->
-        <div id="startScreen" class="w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-10 shadow-2xl border border-white/60 text-center my-auto max-w-2xl">
-            <div class="text-6xl mb-4">🌧️☁️</div>
-            <h2 class="font-jua text-3xl sm:text-4xl text-indigo-950 mb-2">알맞은 과거형 구름을 찾아라!</h2>
-            <p class="text-gray-600 text-sm sm:text-base mb-6">제시되는 현재형 단어에 어울리는 **과거형 구름 3개**를 떨어지기 전에 모두 터치하세요!</p>
-
-            <div class="space-y-4 max-w-md mx-auto text-left">
-                <div>
-                    <label class="block font-bold text-gray-700 mb-1 text-sm"><i class="fas fa-user text-indigo-500 mr-1"></i> 학생 이름 / 학번</label>
-                    <input type="text" id="playerName" placeholder="예: 5학년 1반 홍길동" class="w-full px-4 py-3 rounded-xl border-2 border-indigo-200 focus:border-indigo-500 focus:outline-none text-base font-bold shadow-inner">
-                </div>
-
-                <div>
-                    <label class="block font-bold text-gray-700 mb-1 text-sm"><i class="fas fa-tachometer-alt text-indigo-500 mr-1"></i> 난이도 선택</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="selectDifficulty('easy')" id="diff-easy" class="diff-btn bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-2 border-indigo-200 p-3 rounded-xl font-bold text-sm transition text-left flex flex-col">
-                            <span>🌱 쉬움</span>
-                            <span class="text-xs font-normal text-indigo-600">목숨 10개 (천천히)</span>
-                        </button>
-                        <button type="button" onclick="selectDifficulty('normal')" id="diff-normal" class="diff-btn bg-indigo-600 text-white border-2 border-indigo-600 p-3 rounded-xl font-bold text-sm transition text-left flex flex-col shadow-md">
-                            <span>🌿 보통</span>
-                            <span class="text-xs font-normal text-indigo-100">목숨 5개 (기본)</span>
-                        </button>
-                        <button type="button" onclick="selectDifficulty('hard')" id="diff-hard" class="diff-btn bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-2 border-indigo-200 p-3 rounded-xl font-bold text-sm transition text-left flex flex-col">
-                            <span>🌳 어려움</span>
-                            <span class="text-xs font-normal text-indigo-600">목숨 3개 (빠름)</span>
-                        </button>
-                        <button type="button" onclick="selectDifficulty('master')" id="diff-master" class="diff-btn bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-2 border-indigo-200 p-3 rounded-xl font-bold text-sm transition text-left flex flex-col">
-                            <span>🔥 달인</span>
-                            <span class="text-xs font-normal text-indigo-600">목숨 1개 (매우 빠름)</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-8 flex gap-3 justify-center">
-                <button onclick="startGame()" class="font-jua text-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-10 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-0.5 flex items-center gap-2">
-                    <i class="fas fa-play"></i> 게임 시작하기
-                </button>
-                <button onclick="openRankModal()" class="font-jua text-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-4 rounded-2xl shadow-md transition flex items-center gap-2">
-                    <i class="fas fa-trophy text-amber-500"></i> 순위 보기
+                <button onclick="openRankingModal()" class="bg-amber-400 hover:bg-amber-300 text-amber-950 font-black py-3.5 sm:py-4 px-4 rounded-2xl shadow-xl border-b-4 border-amber-600 active:border-b-0 transform active:translate-y-1 transition text-xs sm:text-sm flex items-center justify-center gap-1">
+                    🏆 순위 보기
                 </button>
             </div>
         </div>
 
-        <!-- 3. 인게임 화면 (게임 시작 시 표시 - 상하 밀착 및 크기 확장) -->
-        <div id="gameScreen" class="w-full flex-col items-center hidden">
-            <!-- HUD (상단 점수판) - 하단 게임판과의 여백 mb-2로 대폭 축소 -->
-            <div class="w-full bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-4 shadow-xl border border-white/60 mb-2 flex flex-wrap justify-between items-center gap-2">
-                <!-- 현재 제시어 -->
-                <div class="flex items-center gap-3 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100">
-                    <span class="text-xs sm:text-sm font-bold text-indigo-500 uppercase">Present</span>
-                    <span id="targetWord" class="font-jua text-2xl sm:text-3xl md:text-4xl text-indigo-950 tracking-wide">GO</span>
-                    <span id="targetProgress" class="bg-indigo-600 text-white text-xs sm:text-sm font-bold px-2.5 py-1 rounded-full">0 / 3</span>
+        <div id="gameScreen" class="hidden w-full flex-1 flex flex-col justify-between max-w-5xl relative">
+            <div class="bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-4 shadow-xl border-2 border-indigo-200 flex flex-wrap items-center justify-between gap-2 mb-2 sm:mb-3">
+                <div class="flex items-center gap-2 sm:gap-3 bg-indigo-50/90 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-indigo-200 shadow-sm">
+                    <span class="text-xs sm:text-sm font-bold text-indigo-500 uppercase tracking-wider hidden xs:inline">제시어</span>
+                    <span id="targetVerbDisplay" class="text-2xl sm:text-4xl font-black text-indigo-800 font-en tracking-wider">GO</span>
+                    <span id="wordProgressDisplay" class="bg-indigo-600 text-white text-xs sm:text-sm font-extrabold px-2.5 py-1 sm:px-3 sm:py-1 rounded-full shadow">🎯 0 / 3</span>
                 </div>
 
-                <!-- 게임 정보 (목숨, 점수, 콤보) -->
-                <div class="flex items-center gap-3 sm:gap-6 font-bold text-sm sm:text-base">
-                    <div class="flex items-center gap-1 text-rose-500 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100">
-                        <i class="fas fa-heart text-lg"></i>
-                        <span id="livesDisplay" class="text-lg">5</span>
+                <div class="flex items-center gap-2 sm:gap-4 font-bold text-xs sm:text-sm">
+                    <div class="flex items-center gap-1.5 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 shadow-sm">
+                        <span class="text-rose-500 text-base">❤️</span>
+                        <span id="livesDisplay" class="text-rose-700 font-black text-sm sm:text-base">10</span>
                     </div>
-                    <div class="flex items-center gap-1 text-amber-500 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-100">
-                        <i class="fas fa-star text-lg"></i>
-                        <span id="scoreDisplay" class="text-lg">0</span>
+                    <div class="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 shadow-sm">
+                        <span class="text-base">⭐</span>
+                        <span id="scoreDisplay" class="text-amber-700 font-black text-sm sm:text-base">0</span>
                     </div>
-                    <div class="hidden md:flex flex-col text-right text-xs text-gray-500">
-                        <span>정답률: <strong id="accuracyDisplay" class="text-indigo-600">100%</strong></span>
-                        <span>콤보: <strong id="comboDisplay" class="text-purple-600">0 Combo</strong></span>
+                    <div class="hidden sm:flex flex-col text-right text-xs text-slate-600 leading-tight">
+                        <div>정답률: <span id="accuracyDisplay" class="text-indigo-600 font-black">100%</span></div>
+                        <div>콤보: <span id="comboDisplay" class="text-orange-500 font-black">0 Combo</span></div>
                     </div>
-                    <!-- 그만하기 버튼 -->
-                    <button onclick="quitGame()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-3 py-2 rounded-xl transition text-xs sm:text-sm flex items-center gap-1">
-                        <i class="fas fa-door-open"></i> 그만하기
+                    <button onclick="quitGame()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 font-extrabold px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-rose-200 transition transform active:scale-95 flex items-center gap-1 shadow-sm" title="게임 나가기">
+                        <span>🚪</span>
+                        <span class="hidden sm:inline">그만하기</span>
                     </button>
                 </div>
             </div>
 
-            <!-- 게임 플레이 캔버스 영역 (PC용 높이 확충 및 시원한 가시성) -->
-            <div id="gameCanvas" class="w-full bg-gradient-to-b from-sky-200 via-sky-100 to-indigo-100 rounded-3xl shadow-2xl border-4 border-white/80 relative overflow-hidden h-[68vh] min-h-[480px]">
-                <!-- 바닥 위험선 -->
-                <div class="absolute bottom-0 left-0 right-0 h-3 bg-rose-400/60 border-t-2 border-rose-500/80 pointer-events-none"></div>
-                <!-- 구름들이 이 박스 내부에서 떨어집니다 -->
+            <div id="gameCanvasContainer" class="relative w-full h-[60vh] min-h-[420px] max-h-[620px] sm:h-[540px] bg-gradient-to-b from-sky-200/90 via-sky-100/80 to-indigo-100/90 rounded-3xl shadow-2xl border-4 border-white/80 overflow-hidden backdrop-blur-sm touch-none">
+                <div id="speedBanner" class="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-400/90 text-amber-950 font-black text-xs sm:text-sm px-4 py-1.5 rounded-full shadow-lg border border-white opacity-0 transition-opacity z-20 pointer-events-none">
+                    ⚡ 속도 증가! (Level <span id="levelDisplay">1</span>)
+                </div>
+
+                <div id="fallingArea" class="w-full h-full relative overflow-hidden"></div>
+                <div class="absolute bottom-0 inset-x-0 h-3.5 bg-gradient-to-t from-rose-500 to-rose-400/50 border-t-2 border-rose-300 pointer-events-none"></div>
             </div>
         </div>
 
-    </div>
+        <div id="resultScreen" class="hidden w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-indigo-200 text-center max-w-md my-auto animate-float">
+            <div class="text-5xl mb-2" id="resultEmoji">🎉</div>
+            <h2 class="text-3xl font-black text-indigo-950 mb-1" id="resultTitle">게임 종료!</h2>
+            <p class="text-slate-500 text-sm mb-6" id="resultSubtitle">수고하셨습니다! 결과를 확인해보세요.</p>
 
-    <!-- 4. 관리자 및 시트 연동 모달 -->
-    <div id="adminModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-jua text-2xl text-indigo-950 flex items-center gap-2">
-                    <i class="fas fa-cog text-indigo-600"></i> 구글 시트 연동 및 단어 관리자
-                </h3>
-                <button onclick="closeAdminModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            <div class="bg-indigo-50/80 rounded-2xl p-4 border border-indigo-100 mb-6 space-y-3 text-left">
+                <div class="flex justify-between items-center pb-2 border-b border-indigo-100">
+                    <span class="text-slate-600 font-bold text-sm">학생 이름</span>
+                    <span id="resultStudentName" class="font-extrabold text-slate-800">김민수</span>
+                </div>
+                <div class="flex justify-between items-center pb-2 border-b border-indigo-100">
+                    <span class="text-slate-600 font-bold text-sm">최종 점수</span>
+                    <span id="resultScore" class="font-black text-2xl text-amber-600">1,250 점</span>
+                </div>
+                <div class="flex justify-between items-center pb-2 border-b border-indigo-100">
+                    <span class="text-slate-600 font-bold text-sm">정답률</span>
+                    <span id="resultAccuracy" class="font-extrabold text-indigo-600 text-lg">92%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-600 font-bold text-sm">정답 / 오답</span>
+                    <span class="font-bold text-slate-700">
+                        <span id="resultCorrect" class="text-emerald-600">12개</span> / 
+                        <span id="resultWrong" class="text-rose-500">2개</span>
+                    </span>
+                </div>
             </div>
 
-            <div class="space-y-6">
-                <!-- 구글 웹앱 URL 연동 -->
-                <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-                    <label class="block font-bold text-gray-800 text-sm mb-1">Google Apps Script 웹 앱 URL</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 px-3 py-2 rounded-xl border border-gray-300 text-sm focus:outline-none focus:border-indigo-500">
-                        <button onclick="saveScriptUrl()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition">저장 및 동기화</button>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">💡 선생님의 구글 앱스크립트 배포 URL을 입력하면 학생들의 제출 결과가 구글 시트로 자동 전송됩니다.</p>
-                </div>
+            <div id="saveStatusBox" class="text-xs font-bold p-2.5 rounded-xl bg-slate-100 text-slate-600 mb-6 flex items-center justify-center gap-2">
+                <span id="saveStatusSpinner" class="hidden animate-spin">⏳</span>
+                <span id="saveStatusText">스프레드시트에 기록 저장 준비 중...</span>
+            </div>
 
-                <!-- 현재 단어 목록 관리 -->
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-bold text-gray-800 text-sm">현재 게임 단어장 (<span id="wordCount">0</span>개)</h4>
-                        <button onclick="syncWithSheet()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1">
-                            <i class="fas fa-sync-alt"></i> 시트 단어 새로고침
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="restartGame()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-3 rounded-xl shadow-md border-b-4 border-indigo-800 active:border-b-0 transform active:translate-y-1 transition text-xs sm:text-sm">
+                    🔄 다시 하기
+                </button>
+                <button onclick="goToMainMenu()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold py-3 rounded-xl shadow-md border-b-4 border-emerald-700 active:border-b-0 transform active:translate-y-1 transition text-xs sm:text-sm">
+                    ⚙️ 난이도 변경
+                </button>
+                <button onclick="openRankingModal()" class="bg-amber-400 hover:bg-amber-300 text-amber-950 font-extrabold py-3 rounded-xl shadow-md border-b-4 border-amber-600 active:border-b-0 transform active:translate-y-1 transition text-xs sm:text-sm">
+                    🏆 순위 보기
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-4xl mx-auto p-4 text-center text-white/80 text-xs font-bold">
+        Elementary English Past Tense Rain Pop Game • Powered by Google Sheets & Apps Script
+    </footer>
+
+    <div id="adminModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border-4 border-indigo-100">
+            <div class="bg-indigo-700 text-white p-4 sm:p-5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">📊</span>
+                    <h3 class="text-lg sm:text-xl font-extrabold">구글 스프레드시트 & 앱스크립트 연동</h3>
+                </div>
+                <button onclick="closeAdminModal()" class="text-white/80 hover:text-white text-2xl font-black">&times;</button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 text-left text-sm text-slate-700">
+                <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                    <label class="block font-extrabold text-indigo-900 mb-1">🔗 구글 앱스크립트 웹앱 URL (Web App URL)</label>
+                    <p class="text-xs text-indigo-700 mb-2">배포한 Google Apps Script의 Web App URL을 아래에 입력해 주시면 학생들의 기록이 자동 저장됩니다.</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 px-3 py-2 rounded-xl border border-indigo-200 text-xs font-mono font-bold focus:outline-none focus:border-indigo-500">
+                        <button onclick="saveScriptUrl()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow transition">
+                            저장하기
                         </button>
                     </div>
+                </div>
 
-                    <div class="border rounded-2xl overflow-hidden max-h-60 overflow-y-auto bg-gray-50">
-                        <table class="w-full text-xs sm:text-sm text-left text-gray-600">
-                            <thead class="bg-gray-200 text-gray-700 sticky top-0">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-extrabold text-slate-900 text-base">📜 앱스크립트(Code.gs) 소스코드</h4>
+                        <button onclick="copyAppsScriptCode()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                            📋 코드 복사
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500">
+                        구글 스프레드시트 [확장 프로그램] ➔ [Apps Script]에 붙여넣고 <span class="font-bold text-slate-800">[웹 앱으로 배포]</span>하세요.
+                    </p>
+                    <pre class="bg-slate-900 text-emerald-400 p-4 rounded-2xl text-xs font-mono overflow-x-auto max-h-48 border border-slate-800" id="gasCodeDisplay">
+/* 구글 앱스크립트 (Code.gs) 파일 내용 */
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var wordSheet = ss.getSheetByName("WordList");
+  var recordSheet = ss.getSheetByName("StudentRecords");
+  if (!wordSheet) setupSheets();
+
+  var action = e ? e.parameter.action : null;
+  if (action === "getWords") {
+    var data = wordSheet.getDataRange().getValues();
+    data.shift();
+    return responseJSON({ success: true, words: data });
+  }
+  if (action === "getRankings") {
+    var records = recordSheet.getDataRange().getValues();
+    records.shift();
+    records.sort(function(a, b) { return Number(b[2]) - Number(a[2]); });
+    return responseJSON({ success: true, rankings: records.slice(0, 50) });
+  }
+  return responseJSON({ success: true, message: "Apps Script running!" });
+}
+
+function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var recordSheet = ss.getSheetByName("StudentRecords");
+    if (!recordSheet) setupSheets();
+
+    var data = JSON.parse(e.postData.contents);
+    recordSheet.appendRow([
+      new Date().toLocaleString("ko-KR"),
+      data.studentName,
+      data.score,
+      data.accuracy + "%",
+      data.difficulty,
+      data.correctCount,
+      data.wrongCount
+    ]);
+    return responseJSON({ success: true });
+  } catch (err) {
+    return responseJSON({ success: false, error: err.toString() });
+  }
+}
+
+function responseJSON(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function setupSheets() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var wordSheet = ss.getSheetByName("WordList") || ss.insertSheet("WordList");
+  if (wordSheet.getLastRow() === 0) {
+    wordSheet.appendRow(["현재형(Present)", "과거형(Correct)", "오답1", "오답2", "오답3"]);
+    wordSheet.appendRow(["go", "went", "goed", "gone", "gwent"]);
+    wordSheet.appendRow(["run", "ran", "runned", "runed", "ron"]);
+    wordSheet.appendRow(["eat", "ate", "eated", "eaten", "aet"]);
+    wordSheet.appendRow(["play", "played", "playied", "playd", "pleyed"]);
+    wordSheet.appendRow(["make", "made", "maked", "maded", "mook"]);
+    wordSheet.appendRow(["buy", "bought", "buyed", "bougth", "boated"]);
+    wordSheet.appendRow(["study", "studied", "studyed", "studid", "studiied"]);
+    wordSheet.appendRow(["see", "saw", "seed", "seen", "so"]);
+    wordSheet.appendRow(["take", "took", "taked", "taken", "tuke"]);
+    wordSheet.appendRow(["write", "wrote", "writed", "written", "wroted"]);
+  }
+  var recordSheet = ss.getSheetByName("StudentRecords") || ss.insertSheet("StudentRecords");
+  if (recordSheet.getLastRow() === 0) {
+    recordSheet.appendRow(["일시", "학생 이름/학번", "최종 점수", "정답률", "난이도(목숨)", "맞힌 개수", "틀린 개수"]);
+  }
+}
+                    </pre>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-extrabold text-slate-900 text-base">📚 적용 중인 영단어 데이터</h4>
+                        <button onclick="syncWordsFromSheet()" class="text-xs bg-amber-500 hover:bg-amber-400 text-white font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                            🔄 시트 데이터 수동 불러오기
+                        </button>
+                    </div>
+                    <div class="border rounded-2xl overflow-hidden max-h-48 overflow-y-auto">
+                        <table class="w-full text-xs text-left text-slate-600">
+                            <thead class="bg-slate-100 text-slate-800 font-bold sticky top-0">
                                 <tr>
-                                    <th class="p-2.5">현재형</th>
-                                    <th class="p-2.5">과거형 (정답)</th>
-                                    <th class="p-2.5">오답 1</th>
-                                    <th class="p-2.5">오답 2</th>
-                                    <th class="p-2.5">오답 3</th>
+                                    <th class="p-2 border-b">현재형</th>
+                                    <th class="p-2 border-b text-emerald-600">정답 (과거형)</th>
+                                    <th class="p-2 border-b text-rose-500">오답 1</th>
+                                    <th class="p-2 border-b text-rose-500">오답 2</th>
+                                    <th class="p-2 border-b text-rose-500">오답 3</th>
                                 </tr>
                             </thead>
-                            <tbody id="wordTableBody">
-                                <!-- 단어 목록 로딩 영역 -->
-                            </tbody>
+                            <tbody id="wordTableBody"></tbody>
                         </table>
                     </div>
                 </div>
+
             </div>
 
-            <div class="mt-6 flex justify-end">
-                <button onclick="closeAdminModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-5 py-2.5 rounded-xl transition text-sm">닫기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. 난이도별 순위(명예의 전당) 모달 -->
-    <div id="rankModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-jua text-2xl text-amber-600 flex items-center gap-2">
-                    <i class="fas fa-trophy text-amber-500"></i> 명예의 전당 (순위)
-                </h3>
-                <button onclick="closeRankModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-            </div>
-
-            <!-- 난이도 필터 탭 -->
-            <div class="flex gap-1 bg-gray-100 p-1.5 rounded-2xl mb-4 overflow-x-auto text-xs sm:text-sm font-bold">
-                <button onclick="filterRankings('all')" id="rankTab-all" class="rank-tab flex-1 py-2 px-3 rounded-xl bg-white text-indigo-900 shadow-sm transition">전체</button>
-                <button onclick="filterRankings('easy')" id="rankTab-easy" class="rank-tab flex-1 py-2 px-3 rounded-xl text-gray-600 hover:text-indigo-900 transition">쉬움</button>
-                <button onclick="filterRankings('normal')" id="rankTab-normal" class="rank-tab flex-1 py-2 px-3 rounded-xl text-gray-600 hover:text-indigo-900 transition">보통</button>
-                <button onclick="filterRankings('hard')" id="rankTab-hard" class="rank-tab flex-1 py-2 px-3 rounded-xl text-gray-600 hover:text-indigo-900 transition">어려움</button>
-                <button onclick="filterRankings('master')" id="rankTab-master" class="rank-tab flex-1 py-2 px-3 rounded-xl text-gray-600 hover:text-indigo-900 transition">달인</button>
-            </div>
-
-            <!-- 순위 목록 테이블 -->
-            <div class="border rounded-2xl overflow-hidden max-h-80 overflow-y-auto">
-                <table class="w-full text-xs sm:text-sm text-left">
-                    <thead class="bg-amber-50 text-amber-900 font-bold sticky top-0">
-                        <tr>
-                            <th class="p-3 text-center">순위</th>
-                            <th class="p-3">이름</th>
-                            <th class="p-3 text-right">점수</th>
-                            <th class="p-3 text-center">난이도</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rankTableBody" class="divide-y">
-                        <!-- 순위 목록 로딩 영역 -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-6 flex justify-end">
-                <button onclick="closeRankModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-5 py-2.5 rounded-xl transition text-sm">닫기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 6. 게임 결과 모달 -->
-    <div id="resultModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl transform transition-all">
-            <div id="resultIcon" class="text-6xl mb-2">🎉</div>
-            <h3 id="resultTitle" class="font-jua text-3xl text-indigo-950 mb-1">게임 종료!</h3>
-            <p id="resultSubtitle" class="text-sm text-gray-500 mb-6">수고하셨습니다! 성적이 저장되었습니다.</p>
-
-            <div class="bg-indigo-50 p-4 rounded-2xl mb-6 space-y-2 text-left text-sm">
-                <div class="flex justify-between"><span class="text-gray-600">최종 점수:</span> <strong id="resScore" class="text-indigo-600 text-lg">0점</strong></div>
-                <div class="flex justify-between"><span class="text-gray-600">맞춘 단어 수:</span> <strong id="resWords" class="text-gray-800">0개</strong></div>
-                <div class="flex justify-between"><span class="text-gray-600">최대 연속 콤보:</span> <strong id="resCombo" class="text-purple-600">0 Combo</strong></div>
-                <div class="flex justify-between"><span class="text-gray-600">정답률:</span> <strong id="resAccuracy" class="text-emerald-600">100%</strong></div>
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <button onclick="restartGame()" class="font-jua text-lg bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
-                    <i class="fas fa-redo"></i> 다시 하기
+            <div class="bg-slate-50 p-4 border-t flex justify-end">
+                <button onclick="closeAdminModal()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition">
+                    닫기
                 </button>
-                <div class="flex gap-2">
-                    <button onclick="goToStartScreen()" class="flex-1 font-jua text-base bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl transition flex items-center justify-center gap-1">
-                        <i class="fas fa-cog"></i> 난이도 변경
-                    </button>
-                    <button onclick="openRankModalFromResult()" class="flex-1 font-jua text-base bg-amber-100 hover:bg-amber-200 text-amber-800 py-2.5 rounded-xl transition flex items-center justify-center gap-1">
-                        <i class="fas fa-trophy"></i> 순위 보기
-                    </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rankingModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden border-4 border-amber-200">
+            <div class="bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 p-4 sm:p-5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-3xl">🏆</span>
+                    <div>
+                        <h3 class="text-xl font-black">명예의 전당 (최종 순위)</h3>
+                        <p class="text-xs text-amber-900 font-bold">상위 성적 학생 순위 목록</p>
+                    </div>
+                </div>
+                <button onclick="closeRankingModal()" class="text-amber-950/80 hover:text-amber-950 text-2xl font-black">&times;</button>
+            </div>
+
+            <div class="px-4 pt-3 pb-1 flex gap-1.5 overflow-x-auto bg-amber-50/50 border-b border-amber-100">
+                <button onclick="setRankingDifficultyFilter('all', this)" class="rank-tab-btn active bg-amber-500 text-white font-black px-3 py-1.5 rounded-xl text-xs transition whitespace-nowrap shadow-sm">전체</button>
+                <button onclick="setRankingDifficultyFilter('10개', this)" class="rank-tab-btn bg-white text-slate-700 hover:bg-amber-100 font-bold px-3 py-1.5 rounded-xl text-xs transition whitespace-nowrap border border-amber-200">쉬움 (10개)</button>
+                <button onclick="setRankingDifficultyFilter('5개', this)" class="rank-tab-btn bg-white text-slate-700 hover:bg-amber-100 font-bold px-3 py-1.5 rounded-xl text-xs transition whitespace-nowrap border border-amber-200">보통 (5개)</button>
+                <button onclick="setRankingDifficultyFilter('3개', this)" class="rank-tab-btn bg-white text-slate-700 hover:bg-amber-100 font-bold px-3 py-1.5 rounded-xl text-xs transition whitespace-nowrap border border-amber-200">어려움 (3개)</button>
+                <button onclick="setRankingDifficultyFilter('1개', this)" class="rank-tab-btn bg-white text-slate-700 hover:bg-amber-100 font-bold px-3 py-1.5 rounded-xl text-xs transition whitespace-nowrap border border-amber-200">달인 (1개)</button>
+            </div>
+
+            <div class="p-4 overflow-y-auto flex-1">
+                <div class="border rounded-2xl overflow-hidden">
+                    <table class="w-full text-xs sm:text-sm text-left text-slate-700">
+                        <thead class="bg-amber-100 text-amber-900 font-extrabold sticky top-0">
+                            <tr>
+                                <th class="p-2.5 text-center">순위</th>
+                                <th class="p-2.5">학생 정보</th>
+                                <th class="p-2 text-center">난이도</th>
+                                <th class="p-2.5 text-right">점수</th>
+                                <th class="p-2.5 text-center">정답률</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
             </div>
+
+            <div class="bg-slate-50 p-4 border-t flex justify-between items-center">
+                <button onclick="loadRankings()" class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-3 py-2 rounded-xl transition">
+                    🔄 새로고침
+                </button>
+                <button onclick="closeRankingModal()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-5 py-2 rounded-xl text-sm transition">
+                    닫기
+                </button>
+            </div>
         </div>
     </div>
 
-
-    <!-- 게임 스크립트 로직 -->
     <script>
-        // 💡 [선생님 전용] 구글 웹 앱 URL 자동 설정 변수
-        const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlxtnqDG0xBLaGYuh0m0Fol03dplZzMbxZJpEXr_H7nSUthDlrR7VSp4TubMbrnERx/exec';
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
 
-        // 기본 영단어 데이터셋 (연동 전 기본 데이터)
-        const DEFAULT_WORDS = [
-            { present: "go", past: "went", wrong1: "goed", wrong2: "gone", wrong3: "wenting" },
-            { present: "have", past: "had", wrong1: "haved", wrong2: "has", wrong3: "having" },
-            { present: "is / am", past: "was", wrong1: "were", wrong2: "been", wrong3: "are" },
-            { present: "are", past: "were", wrong1: "was", wrong2: "wore", wrong3: "ware" },
-            { present: "do", past: "did", wrong1: "does", wrong2: "doed", wrong3: "done" },
-            { present: "see", past: "saw", wrong1: "seed", wrong2: "seen", wrong3: "seew" },
-            { present: "eat", past: "ate", wrong1: "eated", wrong2: "eaten", wrong3: "at" },
-            { present: "make", past: "made", wrong1: "maked", wrong2: "makes", wrong3: "maded" },
-            { present: "come", past: "came", wrong1: "comed", wrong2: "comes", wrong3: "camed" },
-            { present: "take", past: "took", wrong1: "taked", wrong2: "taken", wrong3: "tooked" },
-            { present: "buy", past: "bought", wrong1: "buyed", wrong2: "boughted", wrong3: "bough" },
-            { present: "run", past: "ran", wrong1: "runned", wrong2: "rans", wrong3: "runed" },
-            { present: "write", past: "wrote", wrong1: "writed", wrong2: "written", wrong3: "wroted" },
-            { present: "speak", past: "spoke", wrong1: "speaked", wrong2: "spoken", wrong3: "spoked" },
-            { present: "sing", past: "sang", wrong1: "singed", wrong2: "sung", wrong3: "sanged" }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playPop() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+
+            playCorrect() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.06);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.06 + 0.15);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.06);
+                    osc.stop(now + idx * 0.06 + 0.15);
+                });
+            }
+
+            playWrong() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.25);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+
+            playLevelUp() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+            }
+        }
+
+        const sound = new SoundEffects();
+
+        function toggleSound() {
+            sound.muted = !sound.muted;
+            document.getElementById('soundIcon').innerText = sound.muted ? '🔇' : '🔊';
+            document.getElementById('soundText').innerText = sound.muted ? '소리 OFF' : '소리 ON';
+        }
+
+        let wordList = [
+            { present: "go", correct: "went", distractors: ["goed", "gone", "gwent"] },
+            { present: "run", correct: "ran", distractors: ["runned", "runed", "ron"] },
+            { present: "eat", correct: "ate", distractors: ["eated", "eaten", "aet"] },
+            { present: "play", correct: "played", distractors: ["playied", "playd", "pleyed"] },
+            { present: "make", correct: "made", distractors: ["maked", "maded", "mook"] },
+            { present: "buy", correct: "bought", distractors: ["buyed", "bougth", "boated"] },
+            { present: "study", correct: "studied", distractors: ["studyed", "studid", "studiied"] },
+            { present: "see", correct: "saw", distractors: ["seed", "seen", "so"] },
+            { present: "take", correct: "took", distractors: ["taked", "taken", "tuke"] },
+            { present: "write", correct: "wrote", distractors: ["writed", "written", "wroted"] },
+            { present: "speak", correct: "spoke", distractors: ["speaked", "spoken", "spake"] },
+            { present: "swim", correct: "swam", distractors: ["swimmed", "swum", "swimed"] },
+            { present: "catch", correct: "caught", distractors: ["catched", "coght", "cought"] },
+            { present: "drink", correct: "drank", distractors: ["drinked", "drunk", "dronk"] },
+            { present: "fly", correct: "flew", distractors: ["flyed", "flied", "flown"] }
         ];
 
-        // 난이도 설정값
-        const DIFFICULTY_SETTINGS = {
-            easy: { lives: 10, speedMultiplier: 0.65, label: "쉬움", badge: "🌱" },
-            normal: { lives: 5, speedMultiplier: 1.0, label: "보통", badge: "🌿" },
-            hard: { lives: 3, speedMultiplier: 1.4, label: "어려움", badge: "🌳" },
-            master: { lives: 1, speedMultiplier: 1.9, label: "달인", badge: "🔥" }
-        };
+        // 💡 [선생님 전용] 아래 작은따옴표 안에 구글 웹 앱 URL을 넣으시면 학생들 화면에 자동 적용됩니다.
+        const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlxtnqDG0xBLaGYuh0m0Fol03dplZzMbxZJpEXr_H7nSUthDlrR7VSp4TubMbrnERx/exec'; 
 
-        // 게임 상태 변수
-        let currentWordList = [...DEFAULT_WORDS];
-        let scriptUrl = "";
-        let selectedDifficulty = "normal";
+        const urlParams = new URLSearchParams(window.location.search);
+        let appScriptUrl = urlParams.get('scriptUrl') || localStorage.getItem('past_tense_script_url') || DEFAULT_SCRIPT_URL;
+
+        let localRankings = JSON.parse(localStorage.getItem('past_tense_rankings') || '[]');
+        let currentRankingFilter = 'all';
+
+        let selectedLives = 10;
+        let lives = 10;
         let score = 0;
-        let lives = 5;
         let combo = 0;
-        let maxCombo = 0;
-        let totalClicks = 0;
-        let correctClicks = 0;
-        let currentWordIndex = 0;
-        let foundAnswersCount = 0;
+        let correctHits = 0;
+        let wrongHits = 0;
+        let currentLevel = 1;
+        let fallSpeedMultiplier = 1.0;
         let isGameRunning = false;
-        let soundEnabled = true;
-        let activeClouds = [];
         let animationFrameId = null;
-        let activeRankFilter = 'all';
+        let currentTargetIndex = 0;
+        let activeClouds = [];
+        let lastSpawnTime = 0;
 
-        // 페이지 로드 초기화
-        window.onload = function() {
-            // URL 파라미터 또는 기본 URL 로드
-            const urlParams = new URLSearchParams(window.location.search);
-            const paramUrl = urlParams.get('scriptUrl');
-            
-            const savedUrl = localStorage.getItem("scriptUrl");
-            if (paramUrl) {
-                scriptUrl = paramUrl;
-                localStorage.setItem("scriptUrl", paramUrl);
-            } else if (savedUrl) {
-                scriptUrl = savedUrl;
-            } else if (DEFAULT_SCRIPT_URL) {
-                scriptUrl = DEFAULT_SCRIPT_URL;
-                localStorage.setItem("scriptUrl", DEFAULT_SCRIPT_URL);
-            }
+        let currentWordHits = 0;
+        const REQUIRED_HITS_PER_WORD = 3;
 
-            document.getElementById("scriptUrlInput").value = scriptUrl || "";
-            updateSyncBadge();
-            renderWordTable();
-
-            // 백엔드 시트 자동 연동 동기화
-            if (scriptUrl) {
-                syncWithSheet();
-            }
-        };
-
-        // 연동 상태 배지 업데이트
-        function updateSyncBadge() {
-            const badge = document.getElementById("syncBadge");
-            if (scriptUrl) {
-                badge.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block";
-            } else {
-                badge.className = "w-2.5 h-2.5 rounded-full bg-red-500 inline-block";
-            }
+        function renderWordTable() {
+            const tbody = document.getElementById('wordTableBody');
+            tbody.innerHTML = wordList.map((item) => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-2 border-b font-bold text-slate-800">${item.present}</td>
+                    <td class="p-2 border-b font-extrabold text-emerald-600">${item.correct}</td>
+                    <td class="p-2 border-b text-rose-500">${item.distractors[0] || ''}</td>
+                    <td class="p-2 border-b text-rose-500">${item.distractors[1] || ''}</td>
+                    <td class="p-2 border-b text-rose-500">${item.distractors[2] || ''}</td>
+                </tr>
+            `).join('');
         }
 
-        // 난이도 선택 처리
-        function selectDifficulty(diff) {
-            selectedDifficulty = diff;
-            document.querySelectorAll('.diff-btn').forEach(btn => {
-                btn.className = "diff-btn bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-2 border-indigo-200 p-3 rounded-xl font-bold text-sm transition text-left flex flex-col";
+        function selectDifficulty(numLives, btn) {
+            selectedLives = numLives;
+            document.querySelectorAll('.diff-btn').forEach(b => {
+                b.classList.remove('active', 'bg-emerald-500', 'text-white', 'border-emerald-600');
+                b.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-200');
             });
-            const selectedBtn = document.getElementById(`diff-${diff}`);
-            selectedBtn.className = "diff-btn bg-indigo-600 text-white border-2 border-indigo-600 p-3 rounded-xl font-bold text-sm transition text-left flex flex-col shadow-md";
+            btn.classList.add('active', 'bg-emerald-500', 'text-white', 'border-emerald-600');
+            btn.classList.remove('bg-slate-100', 'text-slate-700', 'border-slate-200');
         }
 
-        // 소리 토글
-        function toggleSound() {
-            soundEnabled = !soundEnabled;
-            document.getElementById("soundIcon").className = soundEnabled ? "fas fa-volume-up text-indigo-600" : "fas fa-volume-mute text-gray-400";
-            document.getElementById("soundText").innerText = soundEnabled ? "소리 ON" : "소리 OFF";
-        }
-
-        // 오디오 재생 함수 (Web Audio API 기반 효과음)
-        function playSound(type) {
-            if (!soundEnabled) return;
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-
-                if (type === 'correct') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
-                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.25);
-                } else if (type === 'wrong') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, ctx.currentTime);
-                    osc.frequency.setValueAtTime(130.81, ctx.currentTime + 0.15);
-                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.3);
-                } else if (type === 'clear') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-                    osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
-                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.4);
-                }
-            } catch(e) {}
-        }
-
-        // 게임 시작
         function startGame() {
-            const nameInput = document.getElementById("playerName").value.trim();
-            if (!nameInput) {
-                alert("학생 이름이나 학번을 입력해 주세요!");
-                document.getElementById("playerName").focus();
+            const studentName = document.getElementById('studentNameInput').value.trim();
+            if (!studentName) {
+                showToast('학번과 이름을 입력해주세요! 예: 5학년 2반 김민수');
                 return;
             }
 
-            // 초기화
+            sound.init();
+
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+
+            lives = selectedLives;
             score = 0;
             combo = 0;
-            maxCombo = 0;
-            totalClicks = 0;
-            correctClicks = 0;
-            lives = DIFFICULTY_SETTINGS[selectedDifficulty].lives;
-            currentWordIndex = 0;
-            
-            // 단어 배열 섞기
-            currentWordList.sort(() => Math.random() - 0.5);
+            correctHits = 0;
+            wrongHits = 0;
+            currentLevel = 1;
+            fallSpeedMultiplier = 1.0;
+            isGameRunning = true;
+            activeClouds = [];
+            lastSpawnTime = Date.now();
+            currentWordHits = 0;
 
-            document.getElementById("startScreen").classList.add("hidden");
-            document.getElementById("gameScreen").classList.remove("hidden");
-            document.getElementById("gameScreen").classList.add("flex");
+            shuffleArray(wordList);
+            currentTargetIndex = 0;
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
 
             updateHUD();
             nextTargetWord();
-            isGameRunning = true;
-            requestAnimationFrame(gameLoop);
         }
 
-        // 다음 제시 단어 설정
-        function nextTargetWord() {
-            if (currentWordIndex >= currentWordList.length) {
-                // 모든 단어 소진 시 재순환
-                currentWordList.sort(() => Math.random() - 0.5);
-                currentWordIndex = 0;
+        function updateWordProgressUI() {
+            const progressEl = document.getElementById('wordProgressDisplay');
+            if (progressEl) {
+                progressEl.innerText = `🎯 ${currentWordHits} / ${REQUIRED_HITS_PER_WORD}`;
             }
-
-            const targetObj = currentWordList[currentWordIndex];
-            document.getElementById("targetWord").innerText = targetObj.present.toUpperCase();
-            foundAnswersCount = 0;
-            document.getElementById("targetProgress").innerText = `0 / 3`;
-
-            spawnCloudsForWord(targetObj);
         }
 
-        // 9개 구름 생성 (정답 3개 + 오답 3종 각각 2개씩)
-        function spawnCloudsForWord(targetObj) {
-            // 이전 구름 삭제
-            clearClouds();
+        function nextTargetWord() {
+            if (currentTargetIndex >= wordList.length) {
+                shuffleArray(wordList);
+                currentTargetIndex = 0;
+            }
+            const currentWord = wordList[currentTargetIndex];
+            currentWordHits = 0;
+            
+            const displayEl = document.getElementById('targetVerbDisplay');
+            if (displayEl) {
+                displayEl.innerText = currentWord.present.toUpperCase();
+            }
+            
+            updateWordProgressUI();
+            spawnCloudsForWord(currentWord);
+            currentTargetIndex++;
 
-            const canvas = document.getElementById("gameCanvas");
-            const canvasWidth = canvas.clientWidth;
+            if (isGameRunning && !animationFrameId) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
 
-            // 9개 구름 항목 구성 (정답 3, 오답1 2개, 오답2 2개, 오답3 2개)
-            const cloudItems = [
-                { text: targetObj.past, isCorrect: true },
-                { text: targetObj.past, isCorrect: true },
-                { text: targetObj.past, isCorrect: true },
-                { text: targetObj.wrong1, isCorrect: false },
-                { text: targetObj.wrong1, isCorrect: false },
-                { text: targetObj.wrong2, isCorrect: false },
-                { text: targetObj.wrong2, isCorrect: false },
-                { text: targetObj.wrong3, isCorrect: false },
-                { text: targetObj.wrong3, isCorrect: false }
+        function spawnCloudsForWord(wordData) {
+            const container = document.getElementById('fallingArea');
+            container.innerHTML = '';
+            activeClouds = [];
+
+            const options = [
+                { text: wordData.correct, isCorrect: true },
+                { text: wordData.correct, isCorrect: true },
+                { text: wordData.correct, isCorrect: true }
             ];
 
-            // 랜덤 순서 섞기
-            cloudItems.sort(() => Math.random() - 0.5);
+            const distractors = wordData.distractors && wordData.distractors.length >= 3 
+                ? wordData.distractors.slice(0, 3)
+                : (wordData.distractors && wordData.distractors.length > 0 
+                    ? [wordData.distractors[0], wordData.distractors[1] || wordData.distractors[0], wordData.distractors[2] || wordData.distractors[0]]
+                    : ['wrong1', 'wrong2', 'wrong3']);
+            
+            distractors.forEach(distText => {
+                options.push({ text: distText, isCorrect: false });
+                options.push({ text: distText, isCorrect: false });
+            });
 
-            // 레인 가로 배치 계산 (3열 스태거링 구조)
-            const laneCount = 3;
-            const laneWidth = canvasWidth / laneCount;
-            const baseSpeed = 0.9 * DIFFICULTY_SETTINGS[selectedDifficulty].speedMultiplier;
+            shuffleArray(options);
 
-            cloudItems.forEach((item, index) => {
-                const cloudEl = document.createElement("div");
-                cloudEl.className = "cloud-element bg-white/95 text-indigo-950 font-bold px-3 py-2 sm:px-5 sm:py-3 rounded-2xl shadow-lg border-2 border-indigo-100 flex items-center gap-1.5 text-sm sm:text-base md:text-lg z-10";
-                cloudEl.innerHTML = `<span class="text-xs sm:text-base">☁️</span> <span>${item.text}</span>`;
+            const containerWidth = container.clientWidth || window.innerWidth || 360;
+            const totalItems = options.length;
+            
+            const isMobile = containerWidth < 640;
+            // 💡 PC 환경에서 긴 단어도 줄바꿈되지 않도록 충분한 최소 가로폭 확보 (Dynamic Cloud Width)
+            const cloudWidth = isMobile 
+                ? Math.max(72, Math.floor(containerWidth / 4.8)) 
+                : Math.max(115, Math.floor(containerWidth / 7.2));
+
+            options.forEach((opt, idx) => {
+                const cloudEl = document.createElement('div');
                 
-                // 레인 위치 지정
-                const lane = index % laneCount;
-                const minX = lane * laneWidth + 10;
-                const maxX = (lane + 1) * laneWidth - 110;
-                const posX = Math.max(minX, Math.min(maxX, minX + Math.random() * (maxX - minX)));
+                let startX;
+                if (isMobile) {
+                    const columns = 3;
+                    const colIndex = idx % columns;
+                    const colWidth = containerWidth / columns;
+                    startX = Math.floor(colIndex * colWidth + (colWidth - cloudWidth) / 2);
+                } else {
+                    const laneWidth = containerWidth / totalItems;
+                    startX = Math.floor(idx * laneWidth + Math.max(0, (laneWidth - cloudWidth) / 2));
+                }
 
-                // 낙하 시작 Y 높이 (차례대로 내려오도록 높이차 분산)
-                const posY = -80 - (Math.floor(index / laneCount) * 120) - (Math.random() * 40);
+                // 💡 오른쪽 화면 영역을 벗어나서 절반만 보이거나 잘리는 현상 방지
+                startX = Math.max(10, Math.min(containerWidth - cloudWidth - 12, startX + (Math.random() * 10 - 5)));
 
-                const speed = baseSpeed + (Math.random() * 0.3);
+                // 💡 상단 경계선 바로 위에서 부드럽게 스폰
+                const startY = -Math.floor(Math.random() * 260 + 50 + (idx * 28));
 
-                canvas.appendChild(cloudEl);
+                cloudEl.className = 'absolute cursor-pointer select-none transition-transform active:scale-95 z-10 touch-none';
+                cloudEl.style.left = `${startX}px`;
+                cloudEl.style.top = `${startY}px`;
+                cloudEl.style.width = `${cloudWidth}px`;
+
+                // 💡 구름 디자인 개편: whitespace-nowrap으로 텍스트 단일 행 유지, 둥근 입체 구름 알약 스타일
+                cloudEl.innerHTML = `
+                    <div class="relative bg-white/95 hover:bg-white border-2 border-indigo-200/90 hover:border-indigo-400 rounded-full py-1.5 px-2.5 sm:py-2 sm:px-4 shadow-lg hover:shadow-xl text-center backdrop-blur-sm transition-all transform hover:scale-105 group flex items-center justify-center gap-1 sm:gap-1.5">
+                        <span class="text-xs sm:text-base leading-none transition-transform group-hover:scale-110">☁️</span>
+                        <span class="font-en font-black text-slate-800 text-xs sm:text-sm md:text-base tracking-wide whitespace-nowrap leading-none">${opt.text}</span>
+                    </div>
+                `;
+
+                const baseSpeed = (isMobile ? 0.75 : 0.85) + Math.random() * 0.4;
+                const speed = baseSpeed * fallSpeedMultiplier;
 
                 const cloudObj = {
                     element: cloudEl,
-                    text: item.text,
-                    isCorrect: item.isCorrect,
-                    x: posX,
-                    y: posY,
+                    x: startX,
+                    y: startY,
                     speed: speed,
-                    lane: lane
+                    isCorrect: opt.isCorrect,
+                    text: opt.text,
+                    clicked: false
                 };
 
-                cloudEl.onclick = (e) => handleCloudClick(e, cloudObj);
-                cloudEl.ontouchstart = (e) => {
+                const triggerHandler = (e) => {
                     e.preventDefault();
-                    handleCloudClick(e, cloudObj);
+                    handleCloudClick(cloudObj);
                 };
 
+                cloudEl.addEventListener('pointerdown', triggerHandler);
+
+                container.appendChild(cloudEl);
                 activeClouds.push(cloudObj);
             });
         }
 
-        // 구름 클릭/터치 이벤트
-        function handleCloudClick(e, cloudObj) {
-            if (!isGameRunning) return;
+        window.addEventListener('resize', () => {
+            const container = document.getElementById('fallingArea');
+            if (!container) return;
+            const containerWidth = container.clientWidth;
+            if (!containerWidth) return;
 
-            totalClicks++;
-            const index = activeClouds.indexOf(cloudObj);
-            if (index === -1) return;
+            activeClouds.forEach(cloud => {
+                if (cloud.element) {
+                    const cloudWidth = cloud.element.offsetWidth || parseFloat(cloud.element.style.width) || 100;
+                    if (cloud.x + cloudWidth > containerWidth - 10) {
+                        cloud.x = Math.max(10, containerWidth - cloudWidth - 10);
+                        cloud.element.style.left = `${cloud.x}px`;
+                    }
+                }
+            });
+        });
+
+        function handleCloudClick(cloudObj) {
+            if (!isGameRunning || cloudObj.clicked) return;
+            cloudObj.clicked = true;
 
             if (cloudObj.isCorrect) {
-                // 정답 처리
-                correctClicks++;
+                sound.playCorrect();
+                correctHits++;
                 combo++;
-                if (combo > maxCombo) maxCombo = combo;
+                currentWordHits++;
                 
-                const comboBonus = Math.floor(combo / 3) * 5;
-                score += 10 + comboBonus;
-                foundAnswersCount++;
+                const gainedScore = 100 + (combo * 10) + (currentLevel * 20);
+                score += gainedScore;
 
-                playSound('correct');
-                showFloatingText(cloudObj.x, cloudObj.y, `+${10 + comboBonus} ${combo > 2 ? combo+'Combo!' : ''}`, 'text-emerald-600');
+                createFloatingText(`+${gainedScore} (${currentWordHits}/${REQUIRED_HITS_PER_WORD})`, cloudObj.x + 20, cloudObj.y, 'text-amber-500');
+                createParticleBurst(cloudObj.x + 40, cloudObj.y + 30, '#3b82f6');
 
-                // 정답 구름 제거
-                cloudObj.element.remove();
-                activeClouds.splice(index, 1);
+                cloudObj.element.classList.add('scale-125', 'opacity-0');
+                setTimeout(() => cloudObj.element.remove(), 200);
 
-                document.getElementById("targetProgress").innerText = `${foundAnswersCount} / 3`;
+                updateWordProgressUI();
 
-                // 3개 정답 모두 맞춘 경우
-                if (foundAnswersCount >= 3) {
-                    playSound('clear');
-                    score += 20; // 클리어 보너스
-                    currentWordIndex++;
+                if (correctHits % 5 === 0) {
+                    currentLevel++;
+                    fallSpeedMultiplier += 0.25;
+                    sound.playLevelUp();
+                    showSpeedBanner();
+                }
+
+                updateHUD();
+
+                if (currentWordHits >= REQUIRED_HITS_PER_WORD) {
+                    createFloatingText('✨ CLEAR! ✨', cloudObj.x + 10, cloudObj.y - 20, 'text-emerald-600 font-black text-xl');
+                    
+                    activeClouds.forEach(c => {
+                        if (!c.clicked) {
+                            c.clicked = true;
+                            c.element.classList.add('opacity-0', 'transition-opacity');
+                            setTimeout(() => c.element.remove(), 300);
+                        }
+                    });
+
                     setTimeout(() => {
                         if (isGameRunning) nextTargetWord();
-                    }, 400);
+                    }, 500);
+                } else {
+                    const remainingCorrect = activeClouds.filter(c => !c.clicked && c.isCorrect);
+                    if (remainingCorrect.length === 0) {
+                        setTimeout(() => {
+                            if (isGameRunning) {
+                                const activeWordIdx = (currentTargetIndex - 1 + wordList.length) % wordList.length;
+                                const currentWord = wordList[activeWordIdx];
+                                spawnCloudsForWord(currentWord);
+                            }
+                        }, 400);
+                    }
                 }
 
             } else {
-                // 오답 처리
+                sound.playWrong();
+                wrongHits++;
                 combo = 0;
                 lives--;
-                score = Math.max(0, score - 5);
 
-                playSound('wrong');
-                showFloatingText(cloudObj.x, cloudObj.y, `-1 ❤️`, 'text-rose-600');
+                createFloatingText('❌ 오답!', cloudObj.x + 20, cloudObj.y, 'text-rose-500');
+                cloudObj.element.classList.add('animate-shake');
+                cloudObj.element.style.filter = 'sepia(1) hue-rotate(-50deg) saturate(5)';
 
-                // 흔들림 애니메이션 후 오답 구름 제거
-                cloudObj.element.classList.add("bg-rose-100", "border-rose-400");
                 setTimeout(() => {
-                    if (cloudObj.element) cloudObj.element.remove();
-                }, 150);
-                activeClouds.splice(index, 1);
+                    cloudObj.element.remove();
+                }, 400);
+
+                updateHUD();
 
                 if (lives <= 0) {
                     endGame();
                 }
             }
-
-            updateHUD();
         }
 
-        // 게임 루프 (구름 위치 업데이트)
         function gameLoop() {
             if (!isGameRunning) return;
 
-            const canvas = document.getElementById("gameCanvas");
-            const canvasHeight = canvas.clientHeight;
+            const containerHeight = document.getElementById('gameCanvasContainer').clientHeight - 50;
 
             for (let i = activeClouds.length - 1; i >= 0; i--) {
                 const cloud = activeClouds[i];
+                if (cloud.clicked) continue;
+
                 cloud.y += cloud.speed;
+                cloud.element.style.top = `${cloud.y}px`;
 
-                // 위치 반영
-                cloud.element.style.transform = `translate3d(${cloud.x}px, ${cloud.y}px, 0)`;
-
-                // 바닥 도착 검사
-                if (cloud.y >= canvasHeight - 45) {
+                if (cloud.y >= containerHeight) {
+                    cloud.clicked = true;
+                    
                     if (cloud.isCorrect) {
-                        // 정답 구름이 바닥에 닿음 -> 감점 및 목숨 차감
+                        sound.playWrong();
                         lives--;
                         combo = 0;
-                        playSound('wrong');
-                        showFloatingText(cloud.x, canvasHeight - 60, `놓침! -1 ❤️`, 'text-rose-600');
-                        
+                        wrongHits++;
+
+                        createFloatingText('⚠️ 놓쳤어요!', cloud.x + 10, containerHeight - 30, 'text-rose-600');
+                        cloud.element.remove();
+                        updateHUD();
+
                         if (lives <= 0) {
                             endGame();
                             return;
                         }
+
+                        const remainingCorrect = activeClouds.filter(c => !c.clicked && c.isCorrect);
+                        if (remainingCorrect.length === 0 && currentWordHits < REQUIRED_HITS_PER_WORD) {
+                            setTimeout(() => {
+                                if (isGameRunning) {
+                                    const activeWordIdx = (currentTargetIndex - 1 + wordList.length) % wordList.length;
+                                    const currentWord = wordList[activeWordIdx];
+                                    spawnCloudsForWord(currentWord);
+                                }
+                            }, 400);
+                        }
+
+                    } else {
+                        cloud.element.remove();
                     }
-                    // 구름 요소 제거
-                    cloud.element.remove();
-                    activeClouds.splice(i, 1);
-                    updateHUD();
                 }
             }
+
+            activeClouds = activeClouds.filter(c => !c.clicked || c.y < containerHeight);
 
             animationFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // 팝업 Floating Text 효과
-        function showFloatingText(x, y, text, colorClass) {
-            const canvas = document.getElementById("gameCanvas");
-            const floatEl = document.createElement("div");
-            floatEl.className = `absolute font-jua font-bold text-lg sm:text-xl ${colorClass} z-30 pointer-events-none transition-all duration-500`;
-            floatEl.style.left = `${x}px`;
-            floatEl.style.top = `${y}px`;
-            floatEl.innerText = text;
+        function createFloatingText(text, x, y, colorClass) {
+            const container = document.getElementById('fallingArea');
+            const el = document.createElement('div');
+            el.className = `absolute font-black text-lg ${colorClass} transition-all duration-700 pointer-events-none z-20`;
+            el.innerText = text;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
 
-            canvas.appendChild(floatEl);
+            container.appendChild(el);
 
-            setTimeout(() => {
-                floatEl.style.top = `${y - 40}px`;
-                floatEl.style.opacity = '0';
-            }, 50);
-
-            setTimeout(() => {
-                floatEl.remove();
-            }, 550);
-        }
-
-        // HUD 화면 최신화
-        function updateHUD() {
-            document.getElementById("livesDisplay").innerText = lives;
-            document.getElementById("scoreDisplay").innerText = score;
-            document.getElementById("comboDisplay").innerText = `${combo} Combo`;
-            
-            const accuracy = totalClicks > 0 ? Math.round((correctClicks / totalClicks) * 100) : 100;
-            document.getElementById("accuracyDisplay").innerText = `${accuracy}%`;
-        }
-
-        // 기존 화면 모든 구름 제거
-        function clearClouds() {
-            activeClouds.forEach(cloud => {
-                if (cloud.element) cloud.element.remove();
+            requestAnimationFrame(() => {
+                el.style.transform = 'translateY(-40px)';
+                el.style.opacity = '0';
             });
-            activeClouds = [];
+
+            setTimeout(() => el.remove(), 700);
         }
 
-        // 게임 도중 그만두기
-        function quitGame() {
-            if (confirm("정말 게임을 중단하고 메인 화면으로 돌아가시겠습니까?")) {
-                isGameRunning = false;
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                clearClouds();
-                document.getElementById("gameScreen").classList.add("hidden");
-                document.getElementById("gameScreen").classList.remove("flex");
-                document.getElementById("startScreen").classList.remove("hidden");
+        function createParticleBurst(x, y, color) {
+            const container = document.getElementById('fallingArea');
+            for (let i = 0; i < 8; i++) {
+                const p = document.createElement('div');
+                p.className = 'absolute w-2.5 h-2.5 rounded-full pointer-events-none z-20';
+                p.style.backgroundColor = color;
+                p.style.left = `${x}px`;
+                p.style.top = `${y}px`;
+                container.appendChild(p);
+
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 30 + Math.random() * 40;
+                const tx = Math.cos(angle) * dist;
+                const ty = Math.sin(angle) * dist;
+
+                p.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 500,
+                    easing: 'ease-out'
+                });
+
+                setTimeout(() => p.remove(), 500);
             }
         }
 
-        // 게임 종료 처리
+        function showSpeedBanner() {
+            const banner = document.getElementById('speedBanner');
+            document.getElementById('levelDisplay').innerText = currentLevel;
+            banner.classList.remove('opacity-0');
+            banner.classList.add('animate-bounce');
+            setTimeout(() => {
+                banner.classList.add('opacity-0');
+                banner.classList.remove('animate-bounce');
+            }, 1500);
+        }
+
+        function updateHUD() {
+            document.getElementById('livesDisplay').innerText = lives;
+            document.getElementById('scoreDisplay').innerText = score.toLocaleString();
+            document.getElementById('comboDisplay').innerText = `${combo} Combo`;
+
+            const totalAttempts = correctHits + wrongHits;
+            const accuracy = totalAttempts > 0 ? Math.round((correctHits / totalAttempts) * 100) : 100;
+            document.getElementById('accuracyDisplay').innerText = `${accuracy}%`;
+        }
+
         function endGame() {
             isGameRunning = false;
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            clearClouds();
 
-            const accuracy = totalClicks > 0 ? Math.round((correctClicks / totalClicks) * 100) : 0;
-            const playerName = document.getElementById("playerName").value.trim();
+            const studentName = document.getElementById('studentNameInput').value.trim() || '익명';
+            const totalAttempts = correctHits + wrongHits;
+            const accuracy = totalAttempts > 0 ? Math.round((correctHits / totalAttempts) * 100) : 0;
 
-            document.getElementById("resScore").innerText = `${score}점`;
-            document.getElementById("resWords").innerText = `${correctClicks}개`;
-            document.getElementById("resCombo").innerText = `${maxCombo} Combo`;
-            document.getElementById("resAccuracy").innerText = `${accuracy}%`;
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
 
-            // 성적 기록 저장 (Local & Google Sheet)
-            saveResultRecord(playerName, score, accuracy, maxCombo);
+            document.getElementById('resultStudentName').innerText = studentName;
+            document.getElementById('resultScore').innerText = `${score.toLocaleString()} 점`;
+            document.getElementById('resultAccuracy').innerText = `${accuracy}%`;
+            document.getElementById('resultCorrect').innerText = `${correctHits}개`;
+            document.getElementById('resultWrong').innerText = `${wrongHits}개`;
 
-            // 결과 모달창 표시
-            document.getElementById("resultModal").classList.remove("hidden");
-        }
-
-        // 성적 전송 및 저장
-        function saveResultRecord(name, score, accuracy, combo) {
-            const record = {
-                name: name,
-                score: score,
-                difficulty: selectedDifficulty,
-                accuracy: accuracy,
-                combo: combo,
-                date: new Date().toLocaleDateString()
-            };
-
-            // LocalStorage 저장 (순위용)
-            let localRanks = JSON.parse(localStorage.getItem("localRanks") || "[]");
-            localRanks.push(record);
-            localRanks.sort((a, b) => b.score - a.score);
-            localStorage.setItem("localRanks", JSON.stringify(localRanks));
-
-            // 구글 스프레드시트 연동 전송
-            if (scriptUrl) {
-                fetch(scriptUrl, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(record)
-                }).catch(err => console.log("전송 에러:", err));
+            if (accuracy >= 80 && score > 500) {
+                document.getElementById('resultEmoji').innerText = '🏆';
+                document.getElementById('resultTitle').innerText = '참 잘했어요!';
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } else {
+                document.getElementById('resultEmoji').innerText = '💪';
+                document.getElementById('resultTitle').innerText = '조금 더 연습해봐요!';
             }
+
+            saveGameResult({
+                studentName: studentName,
+                score: score,
+                accuracy: accuracy,
+                difficulty: `${selectedLives}개`,
+                correctCount: correctHits,
+                wrongCount: wrongHits
+            });
         }
 
-        // 게임 재시작 (동일 난이도)
         function restartGame() {
-            document.getElementById("resultModal").classList.add("hidden");
             startGame();
         }
 
-        // 시작 화면으로 이동 (난이도 재선택)
-        function goToStartScreen() {
-            document.getElementById("resultModal").classList.add("hidden");
-            document.getElementById("gameScreen").classList.add("hidden");
-            document.getElementById("gameScreen").classList.remove("flex");
-            document.getElementById("startScreen").classList.remove("hidden");
-        }
-
-        // 결과창에서 순위 보기 버튼 클릭
-        function openRankModalFromResult() {
-            document.getElementById("resultModal").classList.add("hidden");
-            openRankModal();
-        }
-
-        // --- 순위 모달 로직 ---
-        function openRankModal() {
-            filterRankings(activeRankFilter);
-            document.getElementById("rankModal").classList.remove("hidden");
-        }
-
-        function closeRankModal() {
-            document.getElementById("rankModal").classList.add("hidden");
-        }
-
-        function filterRankings(diffFilter) {
-            activeRankFilter = diffFilter;
-
-            // 탭 버튼 스타일 업데이트
-            document.querySelectorAll('.rank-tab').forEach(tab => {
-                tab.className = "rank-tab flex-1 py-2 px-3 rounded-xl text-gray-600 hover:text-indigo-900 transition";
-            });
-            document.getElementById(`rankTab-${diffFilter}`).className = "rank-tab flex-1 py-2 px-3 rounded-xl bg-white text-indigo-900 shadow-sm font-bold transition";
-
-            const localRanks = JSON.parse(localStorage.getItem("localRanks") || "[]");
-            const tbody = document.getElementById("rankTableBody");
-            tbody.innerHTML = "";
-
-            let filtered = localRanks;
-            if (diffFilter !== 'all') {
-                filtered = localRanks.filter(item => item.difficulty === diffFilter);
+        function quitGame() {
+            isGameRunning = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
             }
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">등록된 순위 데이터가 없습니다.</td></tr>`;
+            activeClouds.forEach(c => {
+                if (c.element) c.element.remove();
+            });
+            activeClouds = [];
+
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            showToast('게임을 중단하고 메인 화면으로 이동했습니다.');
+        }
+
+        function goToMainMenu() {
+            isGameRunning = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+
+        async function saveGameResult(record) {
+            const statusSpinner = document.getElementById('saveStatusSpinner');
+            const statusText = document.getElementById('saveStatusText');
+
+            statusSpinner.classList.remove('hidden');
+            statusText.innerText = '성적을 저장하는 중입니다...';
+
+            localRankings.push({
+                date: new Date().toLocaleDateString('ko-KR'),
+                studentName: record.studentName,
+                score: record.score,
+                accuracy: record.accuracy,
+                difficulty: record.difficulty
+            });
+            localRankings.sort((a, b) => b.score - a.score);
+            localStorage.setItem('past_tense_rankings', JSON.stringify(localRankings));
+
+            if (appScriptUrl) {
+                try {
+                    const res = await fetch(appScriptUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(record)
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                        statusText.innerText = '✅ 구글 스프레드시트에 성공적으로 저장되었습니다!';
+                    } else {
+                        statusText.innerText = '⚠️ 로컬에 저장되었습니다 (시트 응답 오류)';
+                    }
+                } catch (e) {
+                    statusText.innerText = '⚠️ 로컬에 저장되었습니다 (네트워크 상태 확인)';
+                }
+            } else {
+                statusText.innerText = '💾 로컬에 성적이 저장되었습니다 (시트 URL 미설정)';
+            }
+
+            statusSpinner.classList.add('hidden');
+        }
+
+        function setRankingDifficultyFilter(filterVal, btn) {
+            currentRankingFilter = filterVal;
+            document.querySelectorAll('.rank-tab-btn').forEach(b => {
+                b.classList.remove('active', 'bg-amber-500', 'text-white', 'shadow-sm');
+                b.classList.add('bg-white', 'text-slate-700', 'border', 'border-amber-200');
+            });
+            btn.classList.add('active', 'bg-amber-500', 'text-white', 'shadow-sm');
+            btn.classList.remove('bg-white', 'text-slate-700', 'border', 'border-amber-200');
+            loadRankings();
+        }
+
+        async function loadRankings() {
+            const tbody = document.getElementById('rankingTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">순위 데이터를 불러오는 중...</td></tr>';
+
+            let rankings = localRankings;
+
+            if (appScriptUrl) {
+                try {
+                    const res = await fetch(`${appScriptUrl}?action=getRankings`);
+                    const json = await res.json();
+                    if (json.success && json.rankings) {
+                        rankings = json.rankings.map(r => ({
+                            studentName: r[1],
+                            score: r[2],
+                            accuracy: r[3],
+                            difficulty: r[4] || '10개'
+                        }));
+                    }
+                } catch (e) {
+                    console.log('Fetching sheet rankings failed, using local');
+                }
+            }
+
+            if (currentRankingFilter !== 'all') {
+                rankings = rankings.filter(r => r.difficulty === currentRankingFilter);
+            }
+
+            if (rankings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">해당 난이도의 순위 데이터가 없습니다.</td></tr>';
                 return;
             }
 
-            filtered.slice(0, 30).forEach((item, idx) => {
-                const tr = document.createElement("tr");
-                tr.className = idx % 2 === 0 ? "bg-white" : "bg-gray-50";
+            tbody.innerHTML = rankings.slice(0, 30).map((item, idx) => {
+                let badge = `${idx + 1}위`;
+                if (idx === 0) badge = '🥇 1위';
+                else if (idx === 1) badge = '🥈 2위';
+                else if (idx === 2) badge = '🥉 3위';
 
-                const diffBadge = DIFFICULTY_SETTINGS[item.difficulty] ? DIFFICULTY_SETTINGS[item.difficulty].badge : "";
-                const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}`;
+                const diffTag = item.difficulty ? item.difficulty : '10개';
 
-                tr.innerHTML = `
-                    <td class="p-3 text-center font-bold ${idx < 3 ? 'text-amber-600 text-base' : 'text-gray-500'}">${medal}</td>
-                    <td class="p-3 font-bold text-gray-800">${escapeHtml(item.name)}</td>
-                    <td class="p-3 text-right font-bold text-indigo-600">${item.score}점</td>
-                    <td class="p-3 text-center"><span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-bold">${diffBadge} ${item.difficulty}</span></td>
+                return `
+                    <tr class="hover:bg-amber-50/50">
+                        <td class="p-2.5 text-center font-extrabold">${badge}</td>
+                        <td class="p-2.5 font-bold text-slate-800">${item.studentName}</td>
+                        <td class="p-2 text-center">
+                            <span class="inline-block bg-amber-100 text-amber-800 font-extrabold text-[11px] px-2 py-0.5 rounded-md border border-amber-200">
+                                ❤️ ${diffTag}
+                            </span>
+                        </td>
+                        <td class="p-2.5 text-right font-black text-amber-600">${Number(item.score).toLocaleString()} 점</td>
+                        <td class="p-2.5 text-center font-bold text-indigo-600">${item.accuracy}</td>
+                    </tr>
                 `;
-                tbody.appendChild(tr);
-            });
+            }).join('');
         }
 
-        // --- 관리자 모달 및 시트 연동 로직 ---
+        // 💡 접속 시 자동으로 시트에서 단어를 불러오는 함수
+        async function autoSyncWordsFromSheet() {
+            if (!appScriptUrl) return;
+            try {
+                const res = await fetch(`${appScriptUrl}?action=getWords`);
+                const json = await res.json();
+                if (json.success && json.words && json.words.length > 0) {
+                    wordList = json.words.map(r => ({
+                        present: r[0],
+                        correct: r[1],
+                        distractors: [r[2], r[3], r[4]].filter(Boolean)
+                    }));
+                    renderWordTable();
+                }
+            } catch (e) {
+                console.log('시트 단어 자동 동기화 대기 중 또는 연결 실패');
+            }
+        }
+
+        async function syncWordsFromSheet() {
+            if (!appScriptUrl) {
+                showToast('웹앱 URL을 먼저 저장해주세요!');
+                return;
+            }
+
+            try {
+                showToast('시트 단어 목록을 불러오는 중...');
+                const res = await fetch(`${appScriptUrl}?action=getWords`);
+                const json = await res.json();
+                if (json.success && json.words.length > 0) {
+                    wordList = json.words.map(r => ({
+                        present: r[0],
+                        correct: r[1],
+                        distractors: [r[2], r[3], r[4]].filter(Boolean)
+                    }));
+                    renderWordTable();
+                    showToast('✅ 시트의 단어 목록으로 업데이트되었습니다!');
+                }
+            } catch (e) {
+                showToast('단어 목록을 불러오지 못했습니다.');
+            }
+        }
+
         function openAdminModal() {
-            document.getElementById("adminModal").classList.remove("hidden");
+            document.getElementById('scriptUrlInput').value = appScriptUrl;
+            renderWordTable();
+            document.getElementById('adminModal').classList.remove('hidden');
         }
 
         function closeAdminModal() {
-            document.getElementById("adminModal").classList.add("hidden");
+            document.getElementById('adminModal').classList.add('hidden');
+        }
+
+        function openRankingModal() {
+            loadRankings();
+            document.getElementById('rankingModal').classList.remove('hidden');
+        }
+
+        function closeRankingModal() {
+            document.getElementById('rankingModal').classList.add('hidden');
         }
 
         function saveScriptUrl() {
-            const inputUrl = document.getElementById("scriptUrlInput").value.trim();
-            scriptUrl = inputUrl;
-            localStorage.setItem("scriptUrl", inputUrl);
+            const url = document.getElementById('scriptUrlInput').value.trim();
+            appScriptUrl = url;
+            localStorage.setItem('past_tense_script_url', url);
             updateSyncBadge();
-            alert("앱스크립트 URL이 저장되었습니다!");
-            if (scriptUrl) syncWithSheet();
+            showToast('웹앱 URL이 저장되었습니다!');
+            autoSyncWordsFromSheet();
         }
 
-        // 시트 데이터 가져오기 동기화
-        function syncWithSheet() {
-            if (!scriptUrl) return;
-
-            fetch(`${scriptUrl}?action=getWords`)
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data) && data.length > 0) {
-                        currentWordList = data;
-                        renderWordTable();
-                        console.log("시트 단어 동기화 성공:", data.length, "개");
-                    }
-                })
-                .catch(err => console.log("시트 동기화 실패 (기본 단어장 사용):", err));
+        function updateSyncBadge() {
+            const badge = document.getElementById('syncBadge');
+            if (appScriptUrl) {
+                badge.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse ml-1';
+            } else {
+                badge.className = 'w-2.5 h-2.5 rounded-full bg-slate-400 animate-pulse ml-1';
+            }
         }
 
-        // 단어장 테이블 렌더링
-        function renderWordTable() {
-            document.getElementById("wordCount").innerText = currentWordList.length;
-            const tbody = document.getElementById("wordTableBody");
-            tbody.innerHTML = "";
-
-            currentWordList.forEach((item, idx) => {
-                const tr = document.createElement("tr");
-                tr.className = idx % 2 === 0 ? "bg-white" : "bg-gray-50";
-                tr.innerHTML = `
-                    <td class="p-2.5 font-bold text-indigo-900">${escapeHtml(item.present)}</td>
-                    <td class="p-2.5 text-emerald-600 font-bold">${escapeHtml(item.past)}</td>
-                    <td class="p-2.5 text-gray-500">${escapeHtml(item.wrong1)}</td>
-                    <td class="p-2.5 text-gray-500">${escapeHtml(item.wrong2)}</td>
-                    <td class="p-2.5 text-gray-500">${escapeHtml(item.wrong3)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
+        function copyAppsScriptCode() {
+            const codeText = document.getElementById('gasCodeDisplay').innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = codeText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast('앱스크립트 코드가 복사되었습니다!');
         }
 
-        function escapeHtml(text) {
-            if (!text) return "";
-            return String(text)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-2xl z-50 transition-all transform duration-300';
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, 20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
         }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        window.onload = function() {
+            updateSyncBadge();
+            renderWordTable();
+            autoSyncWordsFromSheet(); // 🚀 웹사이트에 접속하면 자동으로 시트의 단어 목록을 최신화합니다.
+        };
     </script>
 </body>
 </html>
