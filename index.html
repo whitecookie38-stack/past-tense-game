@@ -313,7 +313,7 @@ function setupSheets() {
                     <div class="flex justify-between items-center mb-2">
                         <h4 class="font-extrabold text-slate-900 text-base">📚 적용 중인 영단어 데이터</h4>
                         <button onclick="syncWordsFromSheet()" class="text-xs bg-amber-500 hover:bg-amber-400 text-white font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
-                            🔄 시트 데이터 불러오기
+                            🔄 시트 데이터 수동 불러오기
                         </button>
                     </div>
                     <div class="border rounded-2xl overflow-hidden max-h-48 overflow-y-auto">
@@ -456,6 +456,7 @@ function setupSheets() {
                 osc.frequency.setValueAtTime(180, now);
                 osc.frequency.linearRampToValueAtTime(100, now + 0.25);
                 gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
@@ -1099,6 +1100,25 @@ function setupSheets() {
             }).join('');
         }
 
+        // 💡 접속 시 자동으로 시트에서 단어를 불러오는 함수
+        async function autoSyncWordsFromSheet() {
+            if (!appScriptUrl) return;
+            try {
+                const res = await fetch(`${appScriptUrl}?action=getWords`);
+                const json = await res.json();
+                if (json.success && json.words && json.words.length > 0) {
+                    wordList = json.words.map(r => ({
+                        present: r[0],
+                        correct: r[1],
+                        distractors: [r[2], r[3], r[4]].filter(Boolean)
+                    }));
+                    renderWordTable();
+                }
+            } catch (e) {
+                console.log('시트 단어 자동 동기화 대기 중 또는 연결 실패');
+            }
+        }
+
         async function syncWordsFromSheet() {
             if (!appScriptUrl) {
                 showToast('웹앱 URL을 먼저 저장해주세요!');
@@ -1116,7 +1136,7 @@ function setupSheets() {
                         distractors: [r[2], r[3], r[4]].filter(Boolean)
                     }));
                     renderWordTable();
-                    showToast('✅ 단어 목록 업데아되었습니다!');
+                    showToast('✅ 시트의 단어 목록으로 업데이트되었습니다!');
                 }
             } catch (e) {
                 showToast('단어 목록을 불러오지 못했습니다.');
@@ -1148,6 +1168,7 @@ function setupSheets() {
             localStorage.setItem('past_tense_script_url', url);
             updateSyncBadge();
             showToast('웹앱 URL이 저장되었습니다!');
+            autoSyncWordsFromSheet();
         }
 
         function updateSyncBadge() {
@@ -1194,6 +1215,7 @@ function setupSheets() {
         window.onload = function() {
             updateSyncBadge();
             renderWordTable();
+            autoSyncWordsFromSheet(); // 🚀 웹사이트에 접속하면 자동으로 시트의 단어 목록을 최신화합니다.
         };
     </script>
 </body>
